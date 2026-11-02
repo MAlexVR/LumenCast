@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-11-02
+
+### Added
+- Configuration profiles (General): save the current video and audio effects to
+  a `.json` file and load one back. A profile leaves out what belongs to the
+  machine or the program: the chosen devices, the language, the autostart, the
+  tray and the update settings. Files are checked (kind, version and every
+  value) before anything changes.
+- "Restore defaults" now also covers the audio effects, asks to be pressed
+  twice, and keeps the devices and the program's own settings.
+
 ## [1.0.2] - 2026-11-02
 
 ### Fixed

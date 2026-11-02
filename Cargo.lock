@@ -2307,7 +2307,7 @@ checksum = "5d15f86d12da44cd8d4ec3c73984537eb7f4cadcb9776a575a0a8a05ca11005c"
 
 [[package]]
 name = "lumencast"
-version = "1.0.2"
+version = "1.1.0"
 dependencies = [
  "lumencast-app",
  "lumencast-core",
@@ -2323,7 +2323,7 @@ dependencies = [
 
 [[package]]
 name = "lumencast-app"
-version = "1.0.2"
+version = "1.1.0"
 dependencies = [
  "base64 0.22.1",
  "lumencast-audio",
@@ -2343,7 +2343,7 @@ dependencies = [
 
 [[package]]
 name = "lumencast-audio"
-version = "1.0.2"
+version = "1.1.0"
 dependencies = [
  "nnnoiseless",
  "realfft",
@@ -2351,7 +2351,7 @@ dependencies = [
 
 [[package]]
 name = "lumencast-core"
-version = "1.0.2"
+version = "1.1.0"
 dependencies = [
  "serde",
  "serde_json",
@@ -2360,7 +2360,7 @@ dependencies = [
 
 [[package]]
 name = "lumencast-fx"
-version = "1.0.2"
+version = "1.1.0"
 dependencies = [
  "jpeg-encoder",
  "rayon",
@@ -2370,7 +2370,7 @@ dependencies = [
 
 [[package]]
 name = "lumencast-h264"
-version = "1.0.2"
+version = "1.1.0"
 dependencies = [
  "lumencast-core",
  "lumencast-fx",
@@ -2380,7 +2380,7 @@ dependencies = [
 
 [[package]]
 name = "lumencast-nvidia"
-version = "1.0.2"
+version = "1.1.0"
 dependencies = [
  "lumencast-core",
  "lumencast-fx",
@@ -2390,7 +2390,7 @@ dependencies = [
 
 [[package]]
 name = "lumencast-segment"
-version = "1.0.2"
+version = "1.1.0"
 dependencies = [
  "lumencast-fx",
  "thiserror 2.0.21",
@@ -2399,7 +2399,7 @@ dependencies = [
 
 [[package]]
 name = "lumencast-update"
-version = "1.0.2"
+version = "1.1.0"
 dependencies = [
  "base64 0.22.1",
  "minisign-verify",
@@ -2413,7 +2413,7 @@ dependencies = [
 
 [[package]]
 name = "lumencast-v4l"
-version = "1.0.2"
+version = "1.1.0"
 dependencies = [
  "lumencast-core",
  "lumencast-fx",
@@ -2425,7 +2425,7 @@ dependencies = [
 
 [[package]]
 name = "lumencast-vision"
-version = "1.0.2"
+version = "1.1.0"
 dependencies = [
  "lumencast-core",
  "lumencast-fx",

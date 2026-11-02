@@ -118,8 +118,10 @@ mod tests {
     use super::*;
 
     fn tuned() -> (ProcessingSettings, AudioSettings) {
-        let mut processing = ProcessingSettings::default();
-        processing.zoom_percent = 140.0;
+        let mut processing = ProcessingSettings {
+            zoom_percent: 140.0,
+            ..ProcessingSettings::default()
+        };
         processing.key_light.enabled = true;
         processing.key_light.intensity = 70;
         let mut audio = AudioSettings::default();

@@ -229,6 +229,14 @@ export interface PersistedSettings {
   checkUpdates: boolean;
 }
 
+/** The effects and audio settings saved to a file; devices are not part of it. */
+export interface Profile {
+  format: string;
+  version: number;
+  processing: ProcessingSettings;
+  audio: AudioSettings;
+}
+
 export type InstallKind = "rpm" | "deb" | "appImage" | "unmanaged";
 
 export interface AvailableUpdate {

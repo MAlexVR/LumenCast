@@ -237,6 +237,10 @@ export function createMockApi(): Api {
       language = code;
     },
     pickImage: async () => "/home/user/Pictures/fondo.png",
+    pickProfileToSave: async (name) => `/home/user/${name}`,
+    pickProfileToLoad: async () => "/home/user/lumencast-profile.json",
+    saveProfile: async () => {},
+    loadProfile: async () => ({ format: "lumencast-profile", version: 1, processing: { ...processing }, audio: JSON.parse(JSON.stringify(audio)) }),
     getAutostart: async () => autostart,
     setAutostart: async (enabled) => {
       autostart = enabled;

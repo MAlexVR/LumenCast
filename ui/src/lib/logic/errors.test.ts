@@ -9,6 +9,7 @@ describe("errorMessageKey", () => {
       [
         "acquisition_failed",
         "audio_unavailable",
+        "profile_file",
         "update_cancelled",
         "update_failed",
         "update_install_failed",

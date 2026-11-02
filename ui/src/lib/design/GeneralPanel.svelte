@@ -13,7 +13,6 @@
     checkUpdates,
     oncheckupdates,
     onlanguage,
-    onreset,
   }: {
     settings: ProcessingSettings;
     onchange: (next: ProcessingSettings) => void;
@@ -24,7 +23,6 @@
     checkUpdates: boolean;
     oncheckupdates: (enabled: boolean) => void;
     onlanguage: (code: Locale) => void;
-    onreset: () => void;
   } = $props();
 </script>
 
@@ -41,11 +39,6 @@
       {/each}
     </select>
   </label>
-
-  <div class="field">
-    <button class="btn btn-quiet" type="button" onclick={onreset}>{t("reset_defaults")}</button>
-    <span class="hint">{t("reset_defaults_tip")}</span>
-  </div>
 
   <p class="hint about">{t("about_text")}</p>
 </div>

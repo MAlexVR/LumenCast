@@ -97,13 +97,13 @@ Download the installer for your system from the
 **Fedora and other RPM based systems**
 
 ```sh
-sudo dnf install ./LumenCast-1.0.1-1.x86_64.rpm
+sudo dnf install ./LumenCast-1.1.0-1.x86_64.rpm
 ```
 
 **Debian, Ubuntu and other DEB based systems**
 
 ```sh
-sudo apt install ./LumenCast_1.0.1_amd64.deb
+sudo apt install ./LumenCast_1.1.0_amd64.deb
 ```
 
 The package installs the program, its icons and menu entry, and the
@@ -134,7 +134,8 @@ Then open **LumenCast** from your applications menu.
 4. **Audio**: turn on the *Virtual microphone* (and, if you want, the virtual
    output), choose your real devices and the effects, and pick
    *LumenCast Microphone* in your calling program.
-5. **General**: language, autostart, tray behaviour, updates.
+5. **General**: language, autostart, tray behaviour, configuration profiles
+   (save, load, restore defaults) and updates.
 
 ## The NVIDIA background model (optional)
 

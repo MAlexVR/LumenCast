@@ -18,6 +18,10 @@
     audio: "M9 4.5h6v9a3 3 0 0 1-6 0zM5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v2.5M8.5 20.5h7",
     settings: "M4 7h9M17 7h3M4 17h3M11 17h9M15 4.5v5M9 14.5v5",
     center: "M12 9.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5z",
+    save: "M12 4v10.5M7.5 10.5 12 15l4.5-4.5M5 19.5h14",
+    load: "M12 15V4.5M7.5 9 12 4.5 16.5 9M5 19.5h14",
+    reset: "M4.5 7.5V12h4.5M5.4 12a7 7 0 1 0 2-5",
+    profile: "M5 5.5h14v13H5zM5 9.5h14M9 13.5h6",
   } as const;
   export type IconName = keyof typeof PATHS;
 </script>

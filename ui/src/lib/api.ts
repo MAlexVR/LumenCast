@@ -1,7 +1,7 @@
 // Typed access to the Tauri commands. Outside Tauri (browser preview,
 // headless screenshots) the same interface is served by an in-memory mock.
 import { createMockApi } from "./mock/mockApi";
-import type { AppEvent, AudioDevice, UpdateProgress, UpdateStatus, AudioPaths, AudioSettings, CameraInfo, CameraProbe, CaptureMode, Preferences, ProcessingSettings } from "./types";
+import type { AppEvent, AudioDevice, Profile, UpdateProgress, UpdateStatus, AudioPaths, AudioSettings, CameraInfo, CameraProbe, CaptureMode, Preferences, ProcessingSettings } from "./types";
 
 export interface Api {
   listCameras(): Promise<CameraInfo[]>;
@@ -21,6 +21,13 @@ export interface Api {
   setLanguage(code: "es" | "en"): Promise<void>;
   /** Opens the system file picker for a PNG or JPEG; `null` when it is cancelled. */
   pickImage(): Promise<string | null>;
+  /** Asks where to save a profile; `null` when it is cancelled. */
+  pickProfileToSave(suggestedName: string): Promise<string | null>;
+  /** Asks which profile to load; `null` when it is cancelled. */
+  pickProfileToLoad(): Promise<string | null>;
+  saveProfile(path: string): Promise<void>;
+  /** Applies a profile file and returns what is now in use. */
+  loadProfile(path: string): Promise<Profile>;
   /** Whether LumenCast starts when the user logs in. */
   getAutostart(): Promise<boolean>;
   setAutostart(enabled: boolean): Promise<void>;
@@ -71,6 +78,17 @@ function createTauriApi(): Api {
       });
       return typeof chosen === "string" ? chosen : null;
     },
+    pickProfileToSave: async (suggestedName) => {
+      const { save } = await import("@tauri-apps/plugin-dialog");
+      return (await save({ defaultPath: suggestedName, filters: [{ name: "LumenCast profile", extensions: ["json"] }] })) ?? null;
+    },
+    pickProfileToLoad: async () => {
+      const { open } = await import("@tauri-apps/plugin-dialog");
+      const chosen = await open({ multiple: false, directory: false, filters: [{ name: "LumenCast profile", extensions: ["json"] }] });
+      return typeof chosen === "string" ? chosen : null;
+    },
+    saveProfile: async (path) => (await core).invoke<void>("save_profile", { path }),
+    loadProfile: async (path) => (await core).invoke<Profile>("load_profile", { path }),
     getAutostart: async () => (await core).invoke<boolean>("get_autostart"),
     setAutostart: async (enabled) => (await core).invoke<void>("set_autostart", { enabled }),
     setCloseToTray: async (enabled) => (await core).invoke<void>("set_close_to_tray", { enabled }),

@@ -7,6 +7,7 @@
   import FramingControls from "../lib/design/FramingControls.svelte";
   import GeneralPanel from "../lib/design/GeneralPanel.svelte";
   import UpdatePanel from "../lib/design/UpdatePanel.svelte";
+  import ProfilePanel from "../lib/design/ProfilePanel.svelte";
   import ImportNotice from "../lib/design/ImportNotice.svelte";
   import Icon from "../lib/design/Icon.svelte";
   import Rail from "../lib/components/Rail.svelte";
@@ -16,6 +17,7 @@
   import { DEFAULT_AUDIO, initialAudioState, reduceAudio, audioInRange, type AudioState } from "../lib/logic/audio";
   import { initialState, reduce, type Action, type CaptureState } from "../lib/logic/captureState";
   import { DEFAULT_PROCESSING } from "../lib/logic/framing";
+  import { profileFileName } from "../lib/logic/profile";
   import { createLatestSender } from "../lib/logic/latest";
   import { errorMessageKey, toErrorPayload } from "../lib/logic/errors";
   import { fpsLabel, initialSelection, optionsFor, pickCamera, preferredSelection, previewRatio, reconcile, sizeLabel, type Selection } from "../lib/logic/modes";
@@ -102,9 +104,50 @@
     await refreshAudioDevices();
   }
 
-  function resetDefaults() {
-    changeProcessing({ ...DEFAULT_PROCESSING });
+  let profileNotice = $state<{ kind: "saved" | "loaded" | "reset"; file?: string } | null>(null);
+  let profileError = $state<ErrorPayload | null>(null);
+  let profileBusy = $state(false);
+
+  /** Runs one profile action; any failure is shown in the profile card, not as a screen error. */
+  async function profileAction(action: () => Promise<{ kind: "saved" | "loaded" | "reset"; file?: string } | null>) {
+    profileBusy = true;
+    profileError = null;
+    profileNotice = null;
+    try {
+      profileNotice = await action();
+    } catch (error) {
+      profileError = toErrorPayload(error);
+    } finally {
+      profileBusy = false;
+    }
   }
+
+  const saveProfile = () =>
+    profileAction(async () => {
+      const path = await api.pickProfileToSave(profileFileName(new Date()));
+      if (!path) return null;
+      await api.saveProfile(path);
+      return { kind: "saved", file: path };
+    });
+
+  const loadProfile = () =>
+    profileAction(async () => {
+      const path = await api.pickProfileToLoad();
+      if (!path) return null;
+      const profile = await api.loadProfile(path);
+      processing = profile.processing;
+      audio = profile.audio;
+      return { kind: "loaded", file: path };
+    });
+
+  /** Back to the initial effects and audio; the devices, language, autostart and tray stay. */
+  const resetDefaults = () =>
+    profileAction(async () => {
+      const fresh = { ...DEFAULT_AUDIO, microphone: { ...DEFAULT_AUDIO.microphone, source: audio.microphone.source }, speakers: { ...DEFAULT_AUDIO.speakers, sink: audio.speakers.sink } };
+      changeProcessing({ ...DEFAULT_PROCESSING });
+      changeAudio(fresh);
+      return { kind: "reset" };
+    });
 
   function dispatch(action: Action) {
     capture = reduce(capture, action);
@@ -403,7 +446,8 @@
         {:else if tab === "audio"}
           <AudioPanel settings={audio} devices={audioDevices} state={audioState} onchange={changeAudio} onrefresh={refreshAudioDevices} />
         {:else}
-          <GeneralPanel settings={processing} {autostart} onautostart={changeAutostart} {closeToTray} onclosetotray={changeCloseToTray} {checkUpdates} oncheckupdates={changeCheckUpdates} onchange={changeProcessing} onlanguage={chooseLanguage} onreset={resetDefaults} />
+          <GeneralPanel settings={processing} {autostart} onautostart={changeAutostart} {closeToTray} onclosetotray={changeCloseToTray} {checkUpdates} oncheckupdates={changeCheckUpdates} onchange={changeProcessing} onlanguage={chooseLanguage} />
+          <ProfilePanel notice={profileNotice} error={profileError} busy={profileBusy} onsave={() => void saveProfile()} onload={() => void loadProfile()} onreset={() => void resetDefaults()} />
           <UpdatePanel
             status={updateStatus}
             {version}

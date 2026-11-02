@@ -17,6 +17,7 @@ const MESSAGES = new Map<string, MessageKey>([
   ["settings_not_saved", "err_settings_not_saved"],
   ["autostart_failed", "err_autostart_failed"],
   ["audio_unavailable", "err_audio_unavailable"],
+  ["profile_file", "err_profile_file"],
   ["update_not_found", "err_update_not_found"],
   ["update_refused", "err_update_refused"],
   ["update_cancelled", "err_update_cancelled"],
