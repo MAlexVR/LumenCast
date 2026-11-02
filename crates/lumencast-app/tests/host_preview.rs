@@ -160,6 +160,39 @@ fn h264_asked_at_720p_reaches_the_preview_too() {
     h264_reaches_the_preview(1280, 720);
 }
 
+/// The Samsung sends the keyframe of its H264 stream only as the stream starts;
+/// when that frame is lost the picture waits a long time. Start the capture many
+/// times in a row: every start must show a picture within a second or two.
+#[test]
+#[ignore = "needs a camera with an H264 mode (the Samsung VD USB HDCAM)"]
+fn h264_shows_a_picture_every_time_it_starts() {
+    for attempt in 1..=12 {
+        let started = std::time::Instant::now();
+        let events = run_collecting("H264", 640, 480, ProcessingSettings::default());
+        let previews = events
+            .iter()
+            .filter(|e| matches!(e, AppEvent::Frame { .. }))
+            .count();
+        let dropped = events
+            .iter()
+            .filter_map(|e| match e {
+                AppEvent::PreviewDropped { total } => Some(*total),
+                _ => None,
+            })
+            .max()
+            .unwrap_or(0);
+        println!(
+            "start {attempt}: {previews} preview frames, {dropped} dropped, {:.1} s",
+            started.elapsed().as_secs_f64()
+        );
+        assert!(
+            previews >= 60,
+            "start {attempt}: only {previews} preview frames"
+        );
+        assert!(dropped <= 5, "start {attempt}: {dropped} frames dropped");
+    }
+}
+
 /// A typical set of effects, with the built-in background model; prints the
 /// capture rate. `LUMENCAST_CAMERA` picks the camera.
 #[test]

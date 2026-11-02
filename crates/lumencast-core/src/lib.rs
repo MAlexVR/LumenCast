@@ -2,6 +2,7 @@
 pub mod camera;
 pub mod cancel;
 pub mod error;
+pub mod h264;
 pub mod mode;
 pub mod session;
 pub mod stats;

@@ -7,7 +7,7 @@
 use crate::AppState;
 use lumencast_app::core::AppCore;
 use tauri::menu::{CheckMenuItem, Menu, MenuItem, PredefinedMenuItem};
-use tauri::tray::TrayIconBuilder;
+use tauri::tray::{TrayIcon, TrayIconBuilder};
 use tauri::{AppHandle, Emitter, Manager, Wry};
 
 /// Sent to the window when the menu changed a setting it shows.
@@ -114,6 +114,26 @@ pub fn refresh(items: &TrayItems, core: &AppCore, autostart: bool) {
     let _ = items.autostart.set_checked(autostart);
 }
 
+/// Puts the menu on the icon again a little after it was created, twice.
+///
+/// The shell's tray extension reads the menu over DBus as soon as the icon
+/// registers, and the menu's texts can arrive just after that first reading;
+/// an extension that missed them shows rows with no text. Setting the menu again
+/// makes the extension read it complete.
+fn refresh_menu_later(app: &AppHandle, tray: &TrayIcon<Wry>, menu: &Menu<Wry>) {
+    let (app, tray, menu) = (app.clone(), tray.clone(), menu.clone());
+    std::thread::spawn(move || {
+        for pause in [1200u64, 3000] {
+            std::thread::sleep(std::time::Duration::from_millis(pause));
+            let (tray, menu) = (tray.clone(), menu.clone());
+            // The menu is a GTK object: it is only touched from the main thread.
+            let _ = app.run_on_main_thread(move || {
+                let _ = tray.set_menu(Some(menu));
+            });
+        }
+    });
+}
+
 /// Creates the tray icon and its menu.
 pub fn install(app: &AppHandle, core: &AppCore, autostart: bool) -> tauri::Result<TrayItems> {
     let language = language_of(
@@ -160,7 +180,8 @@ pub fn install(app: &AppHandle, core: &AppCore, autostart: bool) -> tauri::Resul
     if let Some(icon) = app.default_window_icon() {
         builder = builder.icon(icon.clone());
     }
-    builder.build(app)?;
+    let tray = builder.build(app)?;
+    refresh_menu_later(app, &tray, &menu);
     Ok(TrayItems {
         camera,
         autostart: start,

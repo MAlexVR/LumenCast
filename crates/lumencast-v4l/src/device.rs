@@ -8,12 +8,13 @@ use crate::probe::{map_probe, FormatProbe, IntervalProbe, SizeProbe, SizesProbe}
 use lumencast_core::camera::{CameraCatalog, CameraInfo, CameraProbe};
 use lumencast_core::cancel::CancelFlag;
 use lumencast_core::error::CaptureError;
+use lumencast_core::h264::{has_keyframe, KeyframeGate, Verdict, MAX_RESTARTS};
 use lumencast_core::mode::{
     CameraCapabilities, CaptureMode, FrameInterval, FrameSize, PixelFormat,
 };
 use lumencast_core::session::{
-    run_capture_observed, CameraPort, FrameSource, RawFrame, SessionConfig, SessionObserver,
-    SessionOutcome,
+    run_capture_observed, CameraPort, EndReason, FrameSource, RawFrame, SessionConfig,
+    SessionObserver, SessionOutcome,
 };
 use std::io;
 use std::path::Path;
@@ -32,6 +33,13 @@ use v4l::{Device, Format, FourCC, Fraction};
 const DEV_DIR: &str = "/dev";
 const SYSFS_VIDEO4LINUX: &str = "/sys/class/video4linux";
 const MJPEG: [u8; 4] = *b"MJPG";
+const H264: [u8; 4] = *b"H264";
+/// The reason a session ends when an H264 stream's keyframe did not come: the
+/// camera is closed and opened again, which is what makes it send one. The
+/// stream is never started again on an open device: that has hung cameras.
+const KEYFRAME_MISSING: &str = "the H264 stream did not start with a keyframe";
+/// How long the camera is left alone between closing and opening it again.
+const REOPEN_PAUSE: Duration = Duration::from_millis(500);
 
 #[derive(Debug, Clone, Copy)]
 pub struct V4lOptions {
@@ -93,6 +101,8 @@ pub fn list_cameras() -> Vec<CameraInfo> {
 }
 
 pub struct V4lCamera {
+    /// Times the stream of an H264 camera may still be reopened for a missing keyframe.
+    keyframe_restarts: u32,
     path: String,
     device: Device,
     options: V4lOptions,
@@ -102,6 +112,7 @@ impl V4lCamera {
     pub fn open_path(path: &str, options: V4lOptions) -> Result<Self, CaptureError> {
         let device = Device::with_path(path).map_err(|error| map_io_error(path, &error))?;
         Ok(Self {
+            keyframe_restarts: MAX_RESTARTS,
             path: path.to_owned(),
             device,
             options,
@@ -217,6 +228,10 @@ impl CameraPort for V4lCamera {
         Ok(Box::new(V4lSource {
             handle: stream.handle(),
             stream,
+            // An H264 stream cannot be decoded before its keyframe, and some
+            // cameras send it only as the stream starts.
+            gate: (negotiated.format.bytes() == H264)
+                .then(|| KeyframeGate::new(self.keyframe_restarts)),
             started: false,
             first_frame_timeout: self.options.first_frame_timeout,
             poll_timeout_ms: i32::try_from(self.options.poll_timeout.as_millis())
@@ -235,6 +250,8 @@ const POLLIN: i16 = 0x0001;
 
 struct V4lSource<'a> {
     stream: Stream<'a>,
+    /// Holds back an H264 stream's frames until its first keyframe.
+    gate: Option<KeyframeGate>,
     handle: Arc<Handle>,
     /// False until the first `next` has started the stream and returned a frame.
     started: bool,
@@ -304,6 +321,19 @@ impl FrameSource for V4lSource<'_> {
             Err(error) => return Err(map_io_error(&self.path, &error)),
         };
         self.idle_polls = 0;
+        if let Some(gate) = self.gate.as_mut() {
+            match gate.judge(has_keyframe(&frame.data)) {
+                Verdict::Deliver => {}
+                Verdict::Hold => return Ok(None),
+                // Ends the session; `run` opens the camera again.
+                Verdict::Restart => {
+                    return Err(CaptureError::Acquisition(format!(
+                        "{}: {KEYFRAME_MISSING}",
+                        self.path
+                    )))
+                }
+            }
+        }
         if self.validate_jpeg {
             let valid_len = validate_mjpeg(&frame.data, self.negotiated.size)?;
             frame.data.truncate(valid_len);
@@ -335,8 +365,23 @@ impl CameraCatalog for V4lCatalog {
         cancel: &CancelFlag,
         observer: &mut dyn SessionObserver,
     ) -> Result<SessionOutcome, CaptureError> {
-        let camera = V4lCamera::open_path(device_path, self.options)?;
-        run_capture_observed(&camera, request, config, cancel, observer)
+        let mut restarts_left = MAX_RESTARTS;
+        loop {
+            let mut camera = V4lCamera::open_path(device_path, self.options)?;
+            camera.keyframe_restarts = restarts_left;
+            let outcome = run_capture_observed(&camera, request, config, cancel, &mut *observer)?;
+            let missing = matches!(
+                &outcome.end,
+                EndReason::Failed { error } if error.message.contains(KEYFRAME_MISSING)
+            );
+            if !missing || restarts_left == 0 || cancel.is_cancelled() {
+                return Ok(outcome);
+            }
+            restarts_left -= 1;
+            // Close the camera completely and give it a moment before opening it again.
+            drop(camera);
+            std::thread::sleep(REOPEN_PAUSE);
+        }
     }
 }
 

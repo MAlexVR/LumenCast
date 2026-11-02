@@ -19,6 +19,7 @@ expect_used = "warn"
 test-support = []
 
 [dependencies]
+lumencast-core.workspace = true
 lumencast-fx.workspace = true
 openh264 = { version = "0.9.9", default-features = false, features = ["libloading"] }
 thiserror.workspace = true
