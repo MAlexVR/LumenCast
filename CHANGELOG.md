@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-11-02
+
+### Fixed
+- H264 cameras whose keyframe is only sent as the stream starts (the Samsung
+  VD USB HDCAM) sometimes took a long time to show a picture: when the keyframe
+  does not come, the camera is now closed and opened again (up to three times),
+  instead of waiting for the next one.
+- The tray menu showed empty rows with the GNOME AppIndicator extension: the
+  menu is now set again just after the icon registers, so the extension reads
+  its texts.
+
 ## [1.0.0] - 2026-11-02
 
 First release of LumenCast: a rewrite of Blucast as a native Rust, Tauri 2 and

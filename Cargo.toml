@@ -3,7 +3,7 @@ resolver = "2"
 members = ["crates/lumencast-core", "crates/lumencast-v4l", "crates/lumencast-app", "crates/lumencast-fx", "crates/lumencast-vision", "crates/lumencast-segment", "crates/lumencast-nvidia", "crates/lumencast-audio", "crates/lumencast-update", "crates/lumencast-h264", "src-tauri"]
 
 [workspace.package]
-version = "1.0.0"
+version = "1.0.1"
 edition = "2021"
 license = "MIT"
 rust-version = "1.97"

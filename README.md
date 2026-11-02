@@ -97,13 +97,13 @@ Download the installer for your system from the
 **Fedora and other RPM based systems**
 
 ```sh
-sudo dnf install ./LumenCast-1.0.0-1.x86_64.rpm
+sudo dnf install ./LumenCast-1.0.1-1.x86_64.rpm
 ```
 
 **Debian, Ubuntu and other DEB based systems**
 
 ```sh
-sudo apt install ./LumenCast_1.0.0_amd64.deb
+sudo apt install ./LumenCast_1.0.1_amd64.deb
 ```
 
 The package installs the program, its icons and menu entry, and the
