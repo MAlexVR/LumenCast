@@ -249,6 +249,16 @@ rm -rf ~/.config/lumencast ~/.config/autostart/lumencast.desktop
   `v4l2-ctl --list-devices`: a *LumenCast Virtual Camera* must be there. If not,
   load the module (see [Install](#install)). Switch on *Virtual camera* in the
   Camera tab, and start the capture.
+- **My call program shows another name for the virtual camera** (for example
+  "BluCast Virtual Camera" or "OBS Virtual Camera"). The name is set when the
+  kernel module loads, by the `card_label` option, and another file in
+  `/etc/modprobe.d` or `/usr/lib/modprobe.d` is overriding LumenCast's. Edit that
+  file to say `card_label="LumenCast Virtual Camera"` and reload the module
+  (`sudo modprobe -r v4l2loopback && sudo modprobe v4l2loopback`, with the camera
+  not in use), or reboot.
+- **The virtual microphone is listed twice.** An earlier run left a helper
+  behind: from 1.0.2 the program ends it itself; with older versions,
+  `pkill -f "pw-loopback -n lumencast_microphone"` while LumenCast is closed.
 - **The window is blank.** Start it with `WEBKIT_DISABLE_COMPOSITING_MODE=1`.
 - **The camera shows fewer frames per second in dim light.** The camera itself
   lowers its rate when exposure is automatic: `v4l2-ctl -d /dev/videoN

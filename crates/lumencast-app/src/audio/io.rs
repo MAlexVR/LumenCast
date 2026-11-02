@@ -102,6 +102,80 @@ fn loopback_arguments(name: &str, sink: &str, output: &str) -> Vec<String> {
         .collect()
 }
 
+/// A running process: its id, its parent's id and its command line (the
+/// arguments joined by spaces).
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct Process {
+    pid: u32,
+    parent: u32,
+    command: String,
+}
+
+/// The `pw-loopback` processes of an earlier run: they carry the name of the
+/// device (`-n name`) and are not children of `own`. A program that was killed
+/// by a signal cannot stop its loopbacks, and each one left behind publishes the
+/// device once more, so the call programs list it twice.
+fn stale_loopbacks(processes: &[Process], name: &str, own: u32) -> Vec<u32> {
+    let marker = format!(" -n {name} ");
+    processes
+        .iter()
+        .filter(|p| p.parent != own && p.command.starts_with("pw-loopback "))
+        .filter(|p| format!("{} ", p.command).contains(&marker))
+        .map(|p| p.pid)
+        .collect()
+}
+
+/// The parent id out of `/proc/<pid>/stat`: the command is in parentheses and
+/// may contain spaces, so the fields are counted after the last parenthesis.
+fn parent_from_stat(stat: &str) -> Option<u32> {
+    let after = stat.rsplit_once(')')?.1;
+    after.split_whitespace().nth(1)?.parse().ok()
+}
+
+fn running_processes() -> Vec<Process> {
+    let Ok(entries) = std::fs::read_dir("/proc") else {
+        return Vec::new();
+    };
+    entries
+        .filter_map(|entry| {
+            let pid: u32 = entry.ok()?.file_name().to_str()?.parse().ok()?;
+            let command = std::fs::read(format!("/proc/{pid}/cmdline")).ok()?;
+            let command = command
+                .split(|byte| *byte == 0)
+                .map(|part| String::from_utf8_lossy(part).into_owned())
+                .collect::<Vec<_>>()
+                .join(" ")
+                .trim_end()
+                .to_owned();
+            let parent =
+                parent_from_stat(&std::fs::read_to_string(format!("/proc/{pid}/stat")).ok()?)?;
+            Some(Process {
+                pid,
+                parent,
+                command,
+            })
+        })
+        .collect()
+}
+
+/// Ends the loopbacks an earlier run left behind for the device `name`, by
+/// process id and only those that carry its exact name.
+fn end_stale_loopbacks(name: &str) {
+    let stale = stale_loopbacks(&running_processes(), name, std::process::id());
+    for pid in &stale {
+        let _ = Command::new("kill")
+            .arg(pid.to_string())
+            .stdin(Stdio::null())
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .status();
+    }
+    if !stale.is_empty() {
+        // Let PipeWire drop their nodes before ours is created and looked for.
+        thread::sleep(Duration::from_millis(300));
+    }
+}
+
 /// Starts a loopback and waits until the node `ready` has its ports.
 fn start_loopback(arguments: &[String], ready: &str) -> Result<Child, String> {
     let mut child = Command::new("pw-loopback")
@@ -292,6 +366,7 @@ impl AudioIo for PipeWireIo {
     }
 
     fn open_virtual_microphone(&self) -> Result<Box<dyn Playback>, String> {
+        end_stale_loopbacks(MICROPHONE_NODE);
         let input = format!("{MICROPHONE_NODE}_input");
         let loopback = start_loopback(
             &loopback_arguments(
@@ -307,6 +382,7 @@ impl AudioIo for PipeWireIo {
     }
 
     fn open_virtual_speakers(&self) -> Result<Box<dyn Capture>, String> {
+        end_stale_loopbacks(SPEAKERS_NODE);
         let loopback = start_loopback(
             &loopback_arguments(
                 SPEAKERS_NODE,
@@ -384,5 +460,42 @@ mod tests {
             with_target(vec!["a".into()], Some("alsa_input.x")),
             ["a", "--target", "alsa_input.x"]
         );
+    }
+
+    fn process(pid: u32, parent: u32, command: &str) -> Process {
+        Process {
+            pid,
+            parent,
+            command: command.to_owned(),
+        }
+    }
+
+    #[test]
+    fn only_loopbacks_of_an_earlier_run_with_the_exact_device_name_are_stale() {
+        let ours = "pw-loopback -n lumencast_microphone -i { media.class=Audio/Sink } -o { node.name=lumencast_microphone }";
+        let processes = [
+            process(10, 1434, ours), // left by an earlier run
+            process(11, 1434, ours), // another one
+            process(12, 500, ours),  // a child of this program
+            process(13, 1434, &ours.replace("microphone", "speakers")), // another device
+            process(14, 1434, "pw-loopback -n lumencast_microphone2 -i {}"), // a similar name
+            process(15, 1434, "python3 pw-loopback -n lumencast_microphone "), // not pw-loopback
+        ];
+        assert_eq!(
+            stale_loopbacks(&processes, "lumencast_microphone", 500),
+            [10, 11]
+        );
+        assert_eq!(stale_loopbacks(&processes, "lumencast_speakers", 500), [13]);
+        assert!(stale_loopbacks(&[], "lumencast_microphone", 1).is_empty());
+    }
+
+    #[test]
+    fn the_parent_is_read_from_a_stat_line_even_when_the_command_has_spaces_and_brackets() {
+        assert_eq!(
+            parent_from_stat("1234 (pw-loopback) S 1434 1234 1234 0 -1"),
+            Some(1434)
+        );
+        assert_eq!(parent_from_stat("1234 (a b) c) S 77 1 1 0"), Some(77));
+        assert_eq!(parent_from_stat("garbage"), None);
     }
 }

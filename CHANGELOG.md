@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.2] - 2026-11-02
+
+### Fixed
+- The virtual microphone showed up twice (or more) in call programs after the
+  program had been killed by a signal: its `pw-loopback` helper survived and
+  published the device again. The program now ends the helpers an earlier run
+  left behind, by process id and only those carrying the device's exact name,
+  before it creates its own.
+
 ## [1.0.1] - 2026-11-02
 
 ### Fixed
