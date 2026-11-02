@@ -3,5 +3,5 @@
   "identifier": "default",
   "description": "Main window: core IPC and events only. Camera access goes through the app's own commands; the only plugin is the native file picker (dialog:allow-open); no filesystem, shell or opener plugins.",
   "windows": ["main"],
-  "permissions": ["core:default", "dialog:allow-open"]
+  "permissions": ["core:default", "dialog:allow-open", "dialog:allow-save"]
 }

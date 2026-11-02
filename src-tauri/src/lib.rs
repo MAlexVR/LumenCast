@@ -137,6 +137,23 @@ async fn list_audio_devices(state: State<'_, AppState>) -> Result<Vec<AudioDevic
 }
 
 #[tauri::command]
+async fn save_profile(state: State<'_, AppState>, path: String) -> Result<(), ErrorPayload> {
+    let core = Arc::clone(&state.core);
+    run_blocking(move || core.save_profile(&path)).await
+}
+
+#[tauri::command]
+async fn load_profile(
+    state: State<'_, AppState>,
+    path: String,
+) -> Result<lumencast_app::profile::Profile, ErrorPayload> {
+    let core = Arc::clone(&state.core);
+    let profile = run_blocking(move || core.load_profile(&path)).await?;
+    refresh_tray(&state);
+    Ok(profile)
+}
+
+#[tauri::command]
 async fn get_preferences(state: State<'_, AppState>) -> Result<Preferences, ErrorPayload> {
     let core = Arc::clone(&state.core);
     run_blocking(move || Ok(core.preferences())).await
@@ -295,6 +312,8 @@ pub fn run() {
             set_autostart,
             set_close_to_tray,
             set_check_updates,
+            save_profile,
+            load_profile,
             update::check_update,
             update::install_update,
             update::cancel_update

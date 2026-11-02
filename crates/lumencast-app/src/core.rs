@@ -311,6 +311,26 @@ impl AppCore {
             .store(visible, Ordering::Relaxed);
     }
 
+    /// Writes the current effects and audio settings to a profile file.
+    pub fn save_profile(&self, path: &str) -> Result<(), AppError> {
+        let path = crate::profile::checked_path(path)?;
+        let profile = crate::profile::Profile::of(&self.processing(), &self.audio_settings());
+        crate::profile::write(&path, &profile)
+    }
+
+    /// Reads a profile file and applies it. The devices chosen on this machine
+    /// stay as they are. Returns what is now in use.
+    pub fn load_profile(&self, path: &str) -> Result<crate::profile::Profile, AppError> {
+        let path = crate::profile::checked_path(path)?;
+        let mut profile = crate::profile::read(&path)?;
+        let current = self.audio_settings();
+        profile.audio.microphone.source = current.microphone.source;
+        profile.audio.speakers.sink = current.speakers.sink;
+        self.set_processing(profile.processing.clone())?;
+        self.set_audio(profile.audio.clone())?;
+        Ok(profile)
+    }
+
     /// Whether closing the window keeps the program in the system tray.
     pub fn close_to_tray(&self) -> bool {
         self.shared.lock_saved().close_to_tray
@@ -1645,6 +1665,70 @@ mod tests {
         drop(core);
         let again = app_with_audio(&store, &io);
         assert!(!again.close_to_tray() && !again.check_updates());
+    }
+
+    #[test]
+    fn a_saved_profile_loads_back_and_keeps_this_machines_devices() {
+        let store = Arc::new(MemoryStore::default());
+        let io = Arc::new(crate::audio::testing::FakeIo::default());
+        let core = app_with_audio(&store, &io);
+        let mut processing = core.processing();
+        processing.zoom_percent = 150.0;
+        processing.key_light.enabled = true;
+        core.set_processing(processing.clone()).unwrap();
+        let mut audio = core.audio_settings();
+        audio.microphone.studio_voice = true;
+        audio.microphone.source = Some("alsa_input.here".into());
+        core.set_audio(audio).unwrap();
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("setup").to_string_lossy().into_owned();
+        core.save_profile(&path).unwrap();
+        assert!(dir.path().join("setup.json").is_file());
+
+        // Another setup, on a machine with another microphone.
+        core.set_processing(ProcessingSettings::default()).unwrap();
+        let mut other = core.audio_settings();
+        other.microphone.studio_voice = false;
+        other.microphone.source = Some("alsa_input.elsewhere".into());
+        core.set_audio(other).unwrap();
+
+        let loaded = core.load_profile(&path).unwrap();
+        assert_eq!(core.processing(), processing);
+        assert_eq!(loaded.processing, processing);
+        let now = core.audio_settings();
+        assert!(now.microphone.studio_voice, "the setup comes back");
+        assert_eq!(
+            now.microphone.source.as_deref(),
+            Some("alsa_input.elsewhere")
+        );
+        assert_eq!(
+            core.save_profile("relative.json").unwrap_err().code(),
+            "profile_file"
+        );
+        assert_eq!(
+            core.load_profile(&dir.path().join("none.json").to_string_lossy())
+                .unwrap_err()
+                .code(),
+            "profile_file"
+        );
+    }
+
+    #[test]
+    fn a_profile_with_an_invalid_value_changes_nothing() {
+        let store = Arc::new(MemoryStore::default());
+        let io = Arc::new(crate::audio::testing::FakeIo::default());
+        let core = app_with_audio(&store, &io);
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("bad.json");
+        std::fs::write(
+            &path,
+            r#"{"format":"lumencast-profile","version":1,"processing":{"zoomPercent":900.0},"audio":{}}"#,
+        )
+        .unwrap();
+        let before = core.processing();
+        let error = core.load_profile(&path.to_string_lossy()).unwrap_err();
+        assert_eq!(error.code(), "invalid_setting");
+        assert_eq!(core.processing(), before);
     }
 
     #[test]

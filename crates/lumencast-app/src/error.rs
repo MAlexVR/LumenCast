@@ -22,6 +22,8 @@ pub enum AppError {
     AutostartFailed(String),
     #[error("audio is not available: {0}")]
     AudioUnavailable(String),
+    #[error("the profile file could not be used: {0}")]
+    ProfileFile(String),
 }
 
 impl AppError {
@@ -36,6 +38,7 @@ impl AppError {
             Self::SettingsNotSaved(_) => "settings_not_saved",
             Self::AutostartFailed(_) => "autostart_failed",
             Self::AudioUnavailable(_) => "audio_unavailable",
+            Self::ProfileFile(_) => "profile_file",
         }
     }
 

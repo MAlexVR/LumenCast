@@ -10,4 +10,5 @@ pub mod events;
 pub mod output;
 pub mod preview;
 pub mod processing;
+pub mod profile;
 pub mod settings;
