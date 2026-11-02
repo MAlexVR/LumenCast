@@ -2,7 +2,6 @@ MIT License
 
 Copyright (c) 2026 Andrei9383
 Copyright (c) 2026 LumenCast contributors
-Copyright (c) 2026 MAlexVR (changes in this fork)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,35 +20,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
----
-
-## NVIDIA Maxine SDK
-
-This software uses the NVIDIA Maxine VideoFX SDK, which is subject to NVIDIA's 
-proprietary license terms. By using this software, you agree to comply with the NVIDIA Maxine SDK License Agreement.
-
-Key terms of the NVIDIA Maxine SDK license:
-- The SDK is licensed for use only on systems with NVIDIA GPUs
-- Redistribution of SDK components (binary form) is permitted
-- Applications must include NVIDIA branding attribution
-
-NVIDIA Maxine is a trademark of NVIDIA Corporation.
-
----
-
-## Third-Party Components
-
-- **OpenCV** — Apache License 2.0
-- **PySide6** — LGPL v3
-- **TensorRT** — NVIDIA proprietary license
-- **cuDNN** — NVIDIA proprietary license
-- **Maxine C++ headers** (`app/third_party/`) — MIT License, Copyright (c)
-  2021 NVIDIA Corporation, from
-  [NVIDIA-Maxine/Maxine-VFX-SDK](https://github.com/NVIDIA-Maxine/Maxine-VFX-SDK)
-- **DNN face detector model** (`app/models/`) — distributed alongside
-  OpenCV's own official `samples/dnn/face_detector`
-
-See [README.md](README.md#third-party-components) for the full picture of
-how these fit together, including why the proprietary SDK binaries
-themselves are never redistributed from this repository.
