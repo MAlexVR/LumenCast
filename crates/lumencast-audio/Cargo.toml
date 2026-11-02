@@ -1,0 +1,13 @@
+[package]
+name = "lumencast-audio"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "LumenCast audio effects on the CPU: noise removal (RNNoise), room echo removal and a studio voice chain. Pure DSP, no I/O."
+
+[lints]
+workspace = true
+
+[dependencies]
+nnnoiseless = { version = "0.5", default-features = false }
+realfft = "3"

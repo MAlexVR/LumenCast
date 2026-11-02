@@ -1,0 +1,21 @@
+[package]
+name = "lumencast-update"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "LumenCast self-update: finds the newest release on GitHub, downloads the installer for how the program is installed, verifies it (SHA-256 and a minisign signature) and installs it."
+
+[lints]
+workspace = true
+
+[dependencies]
+base64 = "0.22"
+minisign-verify = "0.2"
+serde.workspace = true
+serde_json.workspace = true
+sha2 = "0.10"
+thiserror.workspace = true
+ureq = "2"
+
+[dev-dependencies]
+tempfile = "3"

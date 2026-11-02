@@ -1,0 +1,113 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "LumenCast",
+  "version": "1.0.0",
+  "identifier": "dev.lumencast.app",
+  "build": {
+    "beforeDevCommand": "pnpm --dir ui dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "pnpm --dir ui build",
+    "frontendDist": "../ui/dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "LumenCast",
+        "width": 1100,
+        "height": 720,
+        "minWidth": 760,
+        "minHeight": 520
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src ipc: http://ipc.localhost",
+      "devCsp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": [
+      "rpm",
+      "deb"
+    ],
+    "category": "Video",
+    "publisher": "LumenCast",
+    "copyright": "LumenCast contributors",
+    "license": "MIT",
+    "licenseFile": "../LICENSE",
+    "shortDescription": "Webcam effects, virtual camera and clean audio for Linux",
+    "longDescription": "LumenCast cleans up your camera and microphone for video calls: background blur, removal or replacement, a virtual studio light, auto framing, denoising, a virtual camera that any call program can use, and a virtual microphone with noise removal, room echo removal and studio voice.",
+    "icon": [
+      "icons/32x32.png",
+      "icons/64x64.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "linux": {
+      "deb": {
+        "section": "video",
+        "priority": "optional",
+        "depends": [
+          "libwebkit2gtk-4.1-0",
+          "libgtk-3-0",
+          "libayatana-appindicator3-1"
+        ],
+        "recommends": [
+          "pipewire-bin",
+          "v4l2loopback-dkms",
+          "libopenh264-7",
+          "podman",
+          "polkitd"
+        ],
+        "files": {
+          "/usr/lib/modules-load.d/lumencast-v4l2loopback.conf": "../packaging/lumencast-v4l2loopback-load.conf",
+          "/usr/lib/modprobe.d/lumencast-v4l2loopback.conf": "../packaging/lumencast-v4l2loopback.conf",
+          "/usr/lib/udev/rules.d/83-lumencast-vcam.rules": "../packaging/83-lumencast-vcam.rules",
+          "/usr/share/doc/lumen-cast/LICENSE": "../LICENSE",
+          "/usr/share/doc/lumen-cast/THIRD_PARTY.md": "../THIRD_PARTY.md",
+          "/usr/share/doc/lumen-cast/licenses/Apache-2.0.txt": "../licenses/Apache-2.0.txt",
+          "/usr/share/doc/lumen-cast/licenses/BSD-2-Clause-SeetaFace.txt": "../licenses/BSD-2-Clause-SeetaFace.txt",
+          "/usr/share/doc/lumen-cast/licenses/BSD-3-Clause-RNNoise-nnnoiseless.txt": "../licenses/BSD-3-Clause-RNNoise-nnnoiseless.txt",
+          "/usr/share/doc/lumen-cast/licenses/OFL-1.1-Sora.txt": "../licenses/OFL-1.1-Sora.txt",
+          "/usr/share/doc/lumen-cast/licenses/OFL-1.1-Geist.txt": "../licenses/OFL-1.1-Geist.txt"
+        },
+        "postInstallScript": "../packaging/postinst.sh"
+      },
+      "rpm": {
+        "release": "1",
+        "depends": [
+          "webkit2gtk4.1",
+          "gtk3",
+          "libappindicator-gtk3"
+        ],
+        "recommends": [
+          "pipewire-utils",
+          "v4l2loopback",
+          "openh264",
+          "podman",
+          "polkit"
+        ],
+        "conflicts": [
+          "blucast"
+        ],
+        "files": {
+          "/usr/lib/modules-load.d/lumencast-v4l2loopback.conf": "../packaging/lumencast-v4l2loopback-load.conf",
+          "/usr/lib/modprobe.d/lumencast-v4l2loopback.conf": "../packaging/lumencast-v4l2loopback.conf",
+          "/usr/lib/udev/rules.d/83-lumencast-vcam.rules": "../packaging/83-lumencast-vcam.rules",
+          "/usr/share/doc/lumen-cast/LICENSE": "../LICENSE",
+          "/usr/share/doc/lumen-cast/THIRD_PARTY.md": "../THIRD_PARTY.md",
+          "/usr/share/doc/lumen-cast/licenses/Apache-2.0.txt": "../licenses/Apache-2.0.txt",
+          "/usr/share/doc/lumen-cast/licenses/BSD-2-Clause-SeetaFace.txt": "../licenses/BSD-2-Clause-SeetaFace.txt",
+          "/usr/share/doc/lumen-cast/licenses/BSD-3-Clause-RNNoise-nnnoiseless.txt": "../licenses/BSD-3-Clause-RNNoise-nnnoiseless.txt",
+          "/usr/share/doc/lumen-cast/licenses/OFL-1.1-Sora.txt": "../licenses/OFL-1.1-Sora.txt",
+          "/usr/share/doc/lumen-cast/licenses/OFL-1.1-Geist.txt": "../licenses/OFL-1.1-Geist.txt"
+        },
+        "postInstallScript": "../packaging/postinst.sh"
+      }
+    }
+  }
+}

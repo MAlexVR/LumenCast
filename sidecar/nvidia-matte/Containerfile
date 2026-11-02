@@ -1,0 +1,23 @@
+# LumenCast NVIDIA matte server image.
+#
+# The Maxine VideoFX libraries and models (v0.7.2.0) are NVIDIA's proprietary
+# binaries: they are NOT in this repository and not redistributed by it. As in
+# Blucast's own Containerfile they are copied from the image the owner already
+# has locally (ghcr.io/andrei9383/blucast); build with that image present.
+FROM ghcr.io/andrei9383/blucast:latest AS runtime-libs
+
+FROM docker.io/nvidia/cuda:11.8.0-cudnn8-devel-ubuntu20.04 AS builder
+COPY --from=runtime-libs /usr/local/lib/blucast /usr/local/lib/blucast
+COPY sidecar/nvidia-matte/headers/ /headers/
+COPY sidecar/nvidia-matte/matte_server.cpp /src/matte_server.cpp
+RUN g++ -std=c++17 -O2 -I/headers -o /matte_server /src/matte_server.cpp \
+    /usr/local/lib/blucast/libVideoFX.so /usr/local/lib/blucast/libNVCVImage.so \
+    -Wl,-rpath,/usr/local/lib/blucast -lpthread -ldl
+
+FROM docker.io/nvidia/cuda:11.8.0-cudnn8-runtime-ubuntu20.04
+COPY --from=builder /matte_server /app/matte_server
+COPY --from=runtime-libs /usr/local/lib/blucast /usr/local/lib/blucast
+COPY --from=runtime-libs /usr/local/VideoFX/lib/models /usr/local/VideoFX/lib/models
+RUN ln -sf /usr/local/lib/blucast/libVideoFX.so /usr/local/lib/blucast/libNVVideoEffects.so
+ENV LD_LIBRARY_PATH=/usr/local/lib/blucast
+ENTRYPOINT ["/app/matte_server"]

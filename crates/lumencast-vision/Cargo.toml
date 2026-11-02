@@ -1,0 +1,18 @@
+[package]
+name = "lumencast-vision"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "LumenCast face detection for auto framing, using the embedded SeetaFace model."
+
+[lints]
+workspace = true
+
+[dependencies]
+lumencast-fx.workspace = true
+rustface = "0.1.7"
+thiserror.workspace = true
+
+[dev-dependencies]
+lumencast-core = { path = "../lumencast-core" }
+lumencast-v4l = { path = "../lumencast-v4l" }

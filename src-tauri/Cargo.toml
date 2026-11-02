@@ -1,0 +1,23 @@
+[package]
+name = "lumencast"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "LumenCast: camera capture and effects"
+
+[lints]
+workspace = true
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon", "image-png"] }
+tauri-plugin-single-instance = "2"
+tauri-plugin-dialog = "2"
+lumencast-nvidia.workspace = true
+lumencast-core.workspace = true
+lumencast-app.workspace = true
+lumencast-v4l.workspace = true
+lumencast-update.workspace = true
+serde.workspace = true

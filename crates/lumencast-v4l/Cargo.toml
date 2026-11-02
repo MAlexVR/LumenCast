@@ -1,0 +1,19 @@
+[package]
+name = "lumencast-v4l"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Linux V4L2 camera adapter for LumenCast: capability probing and MJPEG frame validation."
+
+[lints]
+workspace = true
+
+[dependencies]
+lumencast-core.workspace = true
+serde.workspace = true
+v4l = "0.14.0"
+
+[dev-dependencies]
+serde_json.workspace = true
+tempfile = "3.27.0"
+lumencast-fx.workspace = true

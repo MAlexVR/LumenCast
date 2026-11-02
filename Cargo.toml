@@ -1,0 +1,49 @@
+[workspace]
+resolver = "2"
+members = ["crates/lumencast-core", "crates/lumencast-v4l", "crates/lumencast-app", "crates/lumencast-fx", "crates/lumencast-vision", "crates/lumencast-segment", "crates/lumencast-nvidia", "crates/lumencast-audio", "crates/lumencast-update", "crates/lumencast-h264", "src-tauri"]
+
+[workspace.package]
+version = "1.0.0"
+edition = "2021"
+license = "MIT"
+rust-version = "1.97"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+unwrap_used = "deny"
+expect_used = "warn"
+
+[workspace.dependencies]
+lumencast-core = { path = "crates/lumencast-core" }
+lumencast-v4l = { path = "crates/lumencast-v4l" }
+lumencast-app = { path = "crates/lumencast-app" }
+lumencast-fx = { path = "crates/lumencast-fx" }
+lumencast-vision = { path = "crates/lumencast-vision" }
+lumencast-segment = { path = "crates/lumencast-segment" }
+lumencast-nvidia = { path = "crates/lumencast-nvidia" }
+lumencast-audio = { path = "crates/lumencast-audio" }
+lumencast-update = { path = "crates/lumencast-update" }
+lumencast-h264 = { path = "crates/lumencast-h264" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+
+# Frame processing is unusable unoptimized: in a plain debug build one 720p JPEG
+# decode took 313 ms and a preview frame about 480 ms, which stalled the
+# capture at 5 fps. Dependencies and the fx crate stay optimized in dev builds.
+[profile.dev.package."*"]
+opt-level = 3
+
+[profile.dev.package.lumencast-audio]
+opt-level = 3
+
+[profile.dev.package.lumencast-fx]
+opt-level = 3
+
+[profile.dev.package.lumencast-segment]
+opt-level = 3
+
+[profile.dev.package.lumencast-vision]
+opt-level = 3

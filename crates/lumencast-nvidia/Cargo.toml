@@ -1,0 +1,17 @@
+[package]
+name = "lumencast-nvidia"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "LumenCast client for the NVIDIA matte server that runs in the user's own container."
+
+[lints]
+workspace = true
+
+[dependencies]
+lumencast-fx.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+lumencast-v4l = { path = "../lumencast-v4l" }
+lumencast-core = { path = "../lumencast-core" }

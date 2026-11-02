@@ -1,0 +1,14 @@
+[package]
+name = "lumencast-segment"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "LumenCast person segmentation (selfie matte) with an embedded Apache-2.0 model, run on the CPU."
+
+[lints]
+workspace = true
+
+[dependencies]
+lumencast-fx.workspace = true
+thiserror.workspace = true
+tract-onnx = "0.23.9"

@@ -1,0 +1,24 @@
+[package]
+name = "lumencast-h264"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "LumenCast H264 decoding through the system OpenH264 library, loaded at runtime."
+
+# The one unsafe call of the project (loading the system OpenH264) lives here,
+# so this crate denies unsafe code instead of forbidding it.
+[lints.rust]
+unsafe_code = "deny"
+
+[lints.clippy]
+unwrap_used = "deny"
+expect_used = "warn"
+
+[features]
+# Exposes a small encoder so other crates can build real H264 streams in tests.
+test-support = []
+
+[dependencies]
+lumencast-fx.workspace = true
+openh264 = { version = "0.9.9", default-features = false, features = ["libloading"] }
+thiserror.workspace = true
